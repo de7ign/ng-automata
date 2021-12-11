@@ -11,6 +11,11 @@ export interface EdgeSmooth {
     roundness: number
 }
 
+export interface CoOrdinates {
+    x: number
+    y: number
+}
+
 export interface EdgeItem {
     id: string
     to: string
