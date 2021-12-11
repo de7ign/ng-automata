@@ -101,6 +101,8 @@ export class NetworkComponent implements AfterViewInit {
 
     this.networkInstance.on("doubleClick", this.handleDoubleClickEvent.bind(this))
 
+    this.networkInstance.on("beforeDrawing", this.createArrowAndHalo.bind(this))
+
   }
 
   private handleSelectedNodeEvent(params: any) {
@@ -156,6 +158,44 @@ export class NetworkComponent implements AfterViewInit {
     };
 
     this.NODES.update(node)
+  }
+
+  createArrowAndHalo(ctx: any) {
+    // creating arrow for start state
+
+    // to make arrow on node 1 to represent it as start node
+    const startNode = 1;
+    const startNodePosition = this.networkInstance.getPositions([startNode]);
+    // in order to keep the default dx as 30, we need to limit the length of node label, otherwise arrow and node will overlap
+    const x1 = startNodePosition[startNode].x - 30;
+    const y1 = startNodePosition[startNode].y;
+    const x2 = startNodePosition[startNode].x - 80;
+    const y2 = startNodePosition[startNode].y;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = this.color.border;
+    ctx.stroke();
+
+    const startRadians =
+      Math.atan((y2 - y1) / (x2 - x1)) +
+      ((x2 >= x1 ? -90 : 90) * Math.PI) / 180;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.translate(x1, y1);
+    ctx.rotate(startRadians);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(5, 18);
+    ctx.lineTo(0, 16);
+    ctx.lineTo(-5, 18);
+    ctx.closePath();
+    ctx.restore();
+    ctx.fillStyle = this.color.border;
+    ctx.fill();
+
+    ctx.save();
   }
 
   getAllNodeDetails() {
