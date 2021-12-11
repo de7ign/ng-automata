@@ -195,6 +195,30 @@ export class NetworkComponent implements AfterViewInit {
     ctx.fillStyle = this.color.border;
     ctx.fill();
 
+    // creating outer circles for final states
+
+    const finalNodesIds = this.NODES.getIds({
+      filter: node => {
+        return node.final;
+      }
+    });
+
+    ctx.save();
+
+    const finalNodePositions = this.networkInstance.getPositions(finalNodesIds);
+    ctx.strokeStyle = this.color.border;
+    finalNodesIds.forEach(value => {
+      ctx.beginPath();
+      ctx.arc(
+        finalNodePositions[value].x,
+        finalNodePositions[value].y,
+        36,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+    });
+
     ctx.save();
   }
 
