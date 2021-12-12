@@ -9,3 +9,21 @@
   </div>
 </div>
 <button *ngIf="devMode" (click)="getAllNodeDetails()">all node details</button>
+<clr-modal [(clrModalOpen)]="nodeLabelModal">
+  <h3 class="modal-title">Add state label</h3>
+  <div class="modal-body">
+    <form class="clrForm clr-form-vertical">
+      <clr-input-container>
+        <label>State name</label>
+        <input placeholder="Enter your state name" clrInput [(ngModel)]="nodeLabel" name="nodeLabel" required />
+        <clr-control-error>You must name for your new state</clr-control-error>
+      </clr-input-container>
+    </form>
+    <br/>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline" (click)="handleNodeLabelClose(false)">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="handleNodeLabelClose(true)">Ok</button>
+  </div>
+</clr-modal>

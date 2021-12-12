@@ -7,6 +7,7 @@ import { HeaderComponent } from './header/header.component';
 import { ClarityModule } from '@clr/angular';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NetworkComponent } from './network/network.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -16,6 +17,7 @@ import { NetworkComponent } from './network/network.component';
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     AppRoutingModule,
     ClarityModule,
     BrowserAnimationsModule

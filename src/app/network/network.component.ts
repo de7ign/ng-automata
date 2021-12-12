@@ -24,7 +24,17 @@ export class NetworkComponent implements AfterViewInit {
       background: 'hsl(198, 69%, 69%)'
     }
   }
+  nodeLabelModal: boolean = false;
+  nodeLabel: string = "";
   devMode: boolean = isDevMode();
+
+  nodeDetails: NodeItem = {
+    id: "id",
+    x: 0,
+    y: 0,
+    label: "state name",
+    final: true
+  }
 
   ngAfterViewInit() {
      const container = this.el.nativeElement;
@@ -191,17 +201,44 @@ export class NetworkComponent implements AfterViewInit {
     }
   }
 
+  handleNodeLabelClose(submit: boolean) {
+    console.log("handleNodeLabelClose");
+    var node = this.nodeDetails;
+    if(submit) {
+      node.label = this.nodeLabel;
+      this.NODES.update(node)
+    } else {
+      // cannot create a node without a user input label
+      // delete the node
+      this.NODES.remove(node.id);
+    }
+
+    this.nodeLabelModal = false;
+    this.clearNodeDetails()
+  }
+
+  private clearNodeDetails() {
+    this.nodeDetails = {
+      id: "id",
+      x: 0,
+      y: 0,
+      label: "state name",
+      final: false
+    }
+  }
+
   private createNewNode(coOrdinates: CoOrdinates) {
     console.log("createNewNode");
+    this.nodeLabelModal = true;
     var node: NodeItem = {
       id: shortUUID.generate(),
       final: false,
-      label: "node label",
+      label: "new node",
       x: coOrdinates.x,
       y: coOrdinates.y
     };
-
     this.NODES.update(node)
+    this.nodeDetails = node;
   }
 
   private createArrowAndHalo(ctx: any) {
