@@ -3,6 +3,7 @@ import { Network } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
 import { NodeItem, EdgeItem, CoOrdinates } from '../interface/network';
 import * as shortUUID from 'short-uuid';
+import keycharm from 'keycharm';
 
 @Component({
   selector: 'app-network',
@@ -30,7 +31,7 @@ export class NetworkComponent implements AfterViewInit {
 
      this.NODES = new DataSet<NodeItem>([
       {
-        id: "1",
+        id: "start",
         label: "start",
         final: false,
         x: -184,
@@ -48,16 +49,16 @@ export class NetworkComponent implements AfterViewInit {
     this.EDGES = new DataSet<EdgeItem>([
       {
         id: "1",
-        from: "1",
+        from: "start",
         to: "2",
         label: "1",
         smooth: { type: "curvedCW", roundness: 0.2 }
       },
-      { id: "2", from: "1", to: "1", label: "0" },
+      { id: "2", from: "start", to: "start", label: "0" },
       {
         id: "3",
         from: "2",
-        to: "1",
+        to: "start",
         label: "1, 2",
         smooth: { type: "curvedCW", roundness: 0.2 }
       }
@@ -97,12 +98,55 @@ export class NetworkComponent implements AfterViewInit {
 
     this.networkInstance = new Network(container, data, OPTIONS);
 
+    // const a = new Network(container, data, OPTIONS);
+
     this.networkInstance.on("selectNode", this.handleSelectedNodeEvent)
 
     this.networkInstance.on("doubleClick", this.handleDoubleClickEvent.bind(this))
 
     this.networkInstance.on("beforeDrawing", this.createArrowAndHalo.bind(this))
 
+    this.networkInstance.on("delete", () => this.networkInstance.deletSelected().bind(this))
+
+
+    //================================================================================
+    // Custom keyboard bindings
+    //================================================================================
+
+    const networkKeyCharm = keycharm({
+      container: container,
+      preventDefault: true
+    })
+
+    networkKeyCharm.bind('delete', this.handleDeleteKeyEvent.bind(this), 'keydown');
+  }
+
+  /**
+   * Check if selected element is start node
+   * 
+   * @returns 
+   */
+  private isStartNodeSelected(): boolean{
+    var selectedNodes = this.networkInstance.getSelectedNodes();
+    if(selectedNodes.length > 0) {
+      if(selectedNodes[0] === "start") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Handle when delete key is pressed for network
+   * 
+   * Deletes selected nodes or edges, except the start node.
+   * 
+   * @param ev 
+   */
+  private handleDeleteKeyEvent(ev: KeyboardEvent) {
+    if(!this.isStartNodeSelected()){
+      this.networkInstance.deleteSelected();
+    }
   }
 
   private handleSelectedNodeEvent(params: any) {
@@ -132,11 +176,11 @@ export class NetworkComponent implements AfterViewInit {
     }
   }
 
-  updateNode(nodeId: string) {
+  private updateNode(nodeId: string) {
     this.toggleNodeFinal(nodeId);
   }
 
-  toggleNodeFinal(nodeId: string) {
+  private toggleNodeFinal(nodeId: string) {
     var node = this.NODES.get(nodeId);
     var coOrds: CoOrdinates = this.networkInstance.getPosition(nodeId);
     if(node) {
@@ -147,7 +191,7 @@ export class NetworkComponent implements AfterViewInit {
     }
   }
 
-  createNewNode(coOrdinates: CoOrdinates) {
+  private createNewNode(coOrdinates: CoOrdinates) {
     console.log("createNewNode");
     var node: NodeItem = {
       id: shortUUID.generate(),
@@ -160,11 +204,11 @@ export class NetworkComponent implements AfterViewInit {
     this.NODES.update(node)
   }
 
-  createArrowAndHalo(ctx: any) {
+  private createArrowAndHalo(ctx: any) {
     // creating arrow for start state
 
     // to make arrow on node 1 to represent it as start node
-    const startNode = 1;
+    const startNode = "start";
     const startNodePosition = this.networkInstance.getPositions([startNode]);
     // in order to keep the default dx as 30, we need to limit the length of node label, otherwise arrow and node will overlap
     const x1 = startNodePosition[startNode].x - 30;
