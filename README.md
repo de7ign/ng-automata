@@ -2,6 +2,8 @@
 
 Automata playground is a web application for educational interaction with finite state machines and visualization of state machines algorithms.
 
+![alt text](/docs/automata-preview.png)
+
 ## About
 
 Automata playground aims to simulate the creation of finite state machines and interact with the FSM with various algorithms.
