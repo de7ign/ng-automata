@@ -1,9 +1,10 @@
 import { AfterViewInit, Component, ElementRef, ViewChild, isDevMode } from '@angular/core';
 import { Network } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
-import { NodeItem, EdgeItem, CoOrdinates } from '../interface/network';
+import { NodeItem, EdgeItem, CoOrdinates, ColorScheme } from '../interface/network';
 import * as shortUUID from 'short-uuid';
 import keycharm from 'keycharm';
+import { InitData } from "./network-init-data";
 
 @Component({
   selector: 'app-network',
@@ -13,22 +14,12 @@ import keycharm from 'keycharm';
 export class NetworkComponent implements AfterViewInit {
 
   @ViewChild('network') el!: ElementRef;
-  networkInstance: any;
-  NODES = new DataSet<NodeItem>([]);
-  EDGES = new DataSet<EdgeItem>([]);
-  color =  {
-    border: 'hsl(198, 100%, 24%)',
-    background: 'hsl(198, 66%, 57%)',
-    highlight: {
-      border: 'hsl(198, 100%, 24%)',
-      background: 'hsl(198, 69%, 69%)'
-    }
-  }
-  nodeLabelModal: boolean = false;
-  nodeLabel: string = "";
-  devMode: boolean = isDevMode();
+  private networkInstance!: Network;
+  private NODES: DataSet<NodeItem> = InitData.node;
+  private EDGES: DataSet<EdgeItem> = InitData.edge;
+  private colorScheme!: ColorScheme;
 
-  nodeDetails: NodeItem = {
+  private nodeDetails: NodeItem = {
     id: "id",
     x: 0,
     y: 0,
@@ -36,87 +27,30 @@ export class NetworkComponent implements AfterViewInit {
     final: true
   }
 
+  //=================================================================
+  // UI Variables
+  //=================================================================
+  viewNodeLabelModal: boolean = false;
+  nodeLabel: string = "";
+  devMode: boolean = isDevMode();
+
+  //=================================================================
+
   ngAfterViewInit() {
-     const container = this.el.nativeElement;
+    const container = this.el.nativeElement;
+    this.NODES = InitData.node
+    this.EDGES = InitData.edge;
+    this.colorScheme = InitData.colorScheme;
 
-     this.NODES = new DataSet<NodeItem>([
-      {
-        id: "start",
-        label: "start",
-        final: false,
-        x: -184,
-        y: -41
-      },
-      {
-        id: "2",
-        label: "Node 1",
-        final: true,
-        x: 11,
-        y: -40
-      }
-    ]);
-
-    this.EDGES = new DataSet<EdgeItem>([
-      {
-        id: "1",
-        from: "start",
-        to: "2",
-        label: "1",
-        smooth: { type: "curvedCW", roundness: 0.2 }
-      },
-      { id: "2", from: "start", to: "start", label: "0" },
-      {
-        id: "3",
-        from: "2",
-        to: "start",
-        label: "1, 2",
-        smooth: { type: "curvedCW", roundness: 0.2 }
-      }
-    ]);
-
-    const data = { nodes: this.NODES, edges: this.EDGES  }
-
-    const OPTIONS = {
-      nodes: {
-        shape: "circle",
-        color: this.color,
-        heightConstraint: {
-          minimum: 50
-        },
-        widthConstraint: {
-          minimum: 50,
-          maximum: 50
-        }
-      },
-      edges: {
-        arrows: {
-          to: { enabled: true, scaleFactor: 1, type: "arrow" }
-        },
-        // by default all edges property should be this
-        // smooth: { type: "curvedCW", roundness: 0.5 }
-        smooth: {      enabled: true,
-          type: "continuous",
-          roundness: 0.0}
-      },
-      physics: {
-        enabled: false 
-      },
-      interaction: {
-        selectConnectedEdges: false
-      }
-    };
-
-    this.networkInstance = new Network(container, data, OPTIONS);
-
-    // const a = new Network(container, data, OPTIONS);
+    this.networkInstance = new Network(container, 
+      { nodes: this.NODES, edges: this.EDGES }, 
+      InitData.networkOptions);
 
     this.networkInstance.on("selectNode", this.handleSelectedNodeEvent)
 
     this.networkInstance.on("doubleClick", this.handleDoubleClickEvent.bind(this))
 
     this.networkInstance.on("beforeDrawing", this.createArrowAndHalo.bind(this))
-
-    this.networkInstance.on("delete", () => this.networkInstance.deletSelected().bind(this))
 
 
     //================================================================================
@@ -131,39 +65,27 @@ export class NetworkComponent implements AfterViewInit {
     networkKeyCharm.bind('delete', this.handleDeleteKeyEvent.bind(this), 'keydown');
   }
 
-  /**
-   * Check if selected element is start node
-   * 
-   * @returns 
-   */
-  private isStartNodeSelected(): boolean{
-    var selectedNodes = this.networkInstance.getSelectedNodes();
-    if(selectedNodes.length > 0) {
-      if(selectedNodes[0] === "start") {
-        return true;
-      }
-    }
-    return false;
-  }
+  //=================================================================
+  // Event Handlers
+  //=================================================================
 
+  //Network Events
+  //=================================================================
   /**
-   * Handle when delete key is pressed for network
+   * Handle when a node is selected
    * 
-   * Deletes selected nodes or edges, except the start node.
-   * 
-   * @param ev 
+   * @param params 
    */
-  private handleDeleteKeyEvent(ev: KeyboardEvent) {
-    if(!this.isStartNodeSelected()){
-      this.networkInstance.deleteSelected();
-    }
-  }
-
   private handleSelectedNodeEvent(params: any) {
     console.log("handleSelectedNodeEvent");
     console.log(params);
   }
 
+  /**
+   * Handle when a double click mouse event is raised inside the network
+   * 
+   * @param params 
+   */
   private handleDoubleClickEvent(params: any) {
     console.log("handleDoubleClickEvent");
     console.log(params);
@@ -176,71 +98,22 @@ export class NetworkComponent implements AfterViewInit {
       edges
     } = params;
 
-    if(nodes[0]) {
+    if (nodes[0]) {
       // double clicked on a existing node, toggle the final property
       this.updateNode(nodes[0]);
-    } else if(!edges[0]) {
+    } else if (!edges[0]) {
       // clicked on empty canvas so create a new node
-      var coOrdinates: CoOrdinates = {x, y};
+      var coOrdinates: CoOrdinates = { x, y };
       this.createNewNode(coOrdinates);
     }
   }
 
-  private updateNode(nodeId: string) {
-    this.toggleNodeFinal(nodeId);
-  }
-
-  private toggleNodeFinal(nodeId: string) {
-    var node = this.NODES.get(nodeId);
-    var coOrds: CoOrdinates = this.networkInstance.getPosition(nodeId);
-    if(node) {
-      node.final = !node.final
-      node.x = coOrds.x
-      node.y = coOrds.y
-      this.NODES.update(node)
-    }
-  }
-
-  handleNodeLabelClose(submit: boolean) {
-    console.log("handleNodeLabelClose");
-    var node = this.nodeDetails;
-    if(submit) {
-      node.label = this.nodeLabel;
-      this.NODES.update(node)
-    } else {
-      // cannot create a node without a user input label
-      // delete the node
-      this.NODES.remove(node.id);
-    }
-
-    this.nodeLabelModal = false;
-    this.clearNodeDetails()
-  }
-
-  private clearNodeDetails() {
-    this.nodeDetails = {
-      id: "id",
-      x: 0,
-      y: 0,
-      label: "state name",
-      final: false
-    }
-  }
-
-  private createNewNode(coOrdinates: CoOrdinates) {
-    console.log("createNewNode");
-    this.nodeLabelModal = true;
-    var node: NodeItem = {
-      id: shortUUID.generate(),
-      final: false,
-      label: "new node",
-      x: coOrdinates.x,
-      y: coOrdinates.y
-    };
-    this.NODES.update(node)
-    this.nodeDetails = node;
-  }
-
+  /**
+   * Draws start arrow and extra circle in final nodes
+   * Triggered before network display in screen
+   * 
+   * @param ctx 
+   */
   private createArrowAndHalo(ctx: any) {
     // creating arrow for start state
 
@@ -256,7 +129,7 @@ export class NetworkComponent implements AfterViewInit {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.strokeStyle = this.color.border;
+    ctx.strokeStyle = this.colorScheme.border;
     ctx.stroke();
 
     const startRadians =
@@ -273,7 +146,7 @@ export class NetworkComponent implements AfterViewInit {
     ctx.lineTo(-5, 18);
     ctx.closePath();
     ctx.restore();
-    ctx.fillStyle = this.color.border;
+    ctx.fillStyle = this.colorScheme.border;
     ctx.fill();
 
     // creating outer circles for final states
@@ -287,7 +160,7 @@ export class NetworkComponent implements AfterViewInit {
     ctx.save();
 
     const finalNodePositions = this.networkInstance.getPositions(finalNodesIds);
-    ctx.strokeStyle = this.color.border;
+    ctx.strokeStyle = this.colorScheme.border;
     finalNodesIds.forEach(value => {
       ctx.beginPath();
       ctx.arc(
@@ -303,6 +176,124 @@ export class NetworkComponent implements AfterViewInit {
     ctx.save();
   }
 
+  /**
+   * Handle when delete key is pressed for network
+   * 
+   * Deletes selected nodes or edges, except the start node.
+   * 
+   * @param ev 
+   */
+  private handleDeleteKeyEvent(ev: KeyboardEvent) {
+    if (!this.isStartNodeSelected()) {
+      this.networkInstance.deleteSelected();
+    }
+  }
+
+  // HTML Events
+  //=================================================================
+  /**
+   * Close the node label input modal
+   * 
+   * @param submit 
+   */
+  handleNodeLabelClose(submit: boolean) {
+    console.log("handleNodeLabelClose");
+    var node = this.nodeDetails;
+    if (submit) {
+      node.label = this.nodeLabel;
+      this.NODES.update(node)
+    } else {
+      // cannot create a node without a user input label
+      // delete the node
+      this.NODES.remove(node.id);
+    }
+
+    this.viewNodeLabelModal = false;
+    this.clearNodeDetails()
+  }
+
+  //=================================================================
+  //Utility
+  //=================================================================
+
+  /**
+   * Check if selected element is a start node
+   * 
+   * @returns 
+   */
+  private isStartNodeSelected(): boolean {
+    var selectedNodes = this.networkInstance.getSelectedNodes();
+    if (selectedNodes.length > 0) {
+      if (selectedNodes[0] === "start") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Updates the node
+   * 
+   * @param nodeId
+   */
+  private updateNode(nodeId: string) {
+    this.toggleNodeFinal(nodeId);
+  }
+
+  /**
+   * Toggles and update the final property of node
+   * 
+   * @param nodeId 
+   */
+  private toggleNodeFinal(nodeId: string) {
+    var node = this.NODES.get(nodeId);
+    var coOrds: CoOrdinates = this.networkInstance.getPosition(nodeId);
+    if (node) {
+      node.final = !node.final
+      node.x = coOrds.x
+      node.y = coOrds.y
+      this.NODES.update(node)
+    }
+  }
+
+  /**
+   * Clear the proxy node
+   */
+  private clearNodeDetails() {
+    this.nodeDetails = {
+      id: "id",
+      x: 0,
+      y: 0,
+      label: "state name",
+      final: false
+    }
+  }
+
+  /**
+   * Create/Add a new node to network at the supplied coordinates
+   * 
+   * @param coOrdinates 
+   */
+  private createNewNode(coOrdinates: CoOrdinates) {
+    console.log("createNewNode");
+    this.viewNodeLabelModal = true;
+    var node: NodeItem = {
+      id: shortUUID.generate(),
+      final: false,
+      label: "new node",
+      x: coOrdinates.x,
+      y: coOrdinates.y
+    };
+    this.NODES.update(node)
+    this.nodeDetails = node;
+  }
+
+  //=================================================================
+  // Developer tools
+  //=================================================================
+  /**
+   * print all node details
+   */
   getAllNodeDetails() {
     console.log(this.networkInstance.getPositions(this.NODES.getIds()))
   }

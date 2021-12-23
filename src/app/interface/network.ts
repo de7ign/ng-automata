@@ -23,3 +23,13 @@ export interface EdgeItem {
     label: string
     smooth?: any | EdgeSmooth
 }
+
+interface ColorScheme_highlight {
+    border: string
+    background: string
+}
+export interface ColorScheme {
+    border: string
+    background: string
+    highlight: ColorScheme_highlight
+}

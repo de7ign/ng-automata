@@ -1,0 +1,12 @@
+List of functionalities for tracking and testing purpose
+
+1. Create a node
+    User should be able to create a node with double clicking,
+    which a modal popup should come and which asks for node label input.
+    
+    If user inputs a label for node then newly created node will be updated with the label.
+    else no nodes will created.
+
+2. Delete a node/edge
+    User should be able to delete a selected node or edge by pressing delete key.
+    If node is deleted then it's connecting edges will also be deleted
