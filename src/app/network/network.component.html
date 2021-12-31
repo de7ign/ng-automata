@@ -12,10 +12,10 @@
 <clr-modal [(clrModalOpen)]="viewNodeLabelModal">
   <h3 class="modal-title">Add state label</h3>
   <div class="modal-body">
-    <form class="clrForm clr-form-vertical">
+    <form class="clrForm clr-form-vertical" [formGroup]="nodeLabelForm">
       <clr-input-container>
         <label>State name</label>
-        <input placeholder="Enter your state name" clrInput [(ngModel)]="nodeLabel" name="nodeLabel" required />
+        <input placeholder="Enter your state name" clrInput name="nodeLabel" formControlName="nodeLabelInput" required />
         <clr-control-error>You must name for your new state</clr-control-error>
       </clr-input-container>
     </form>

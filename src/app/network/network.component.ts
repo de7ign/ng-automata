@@ -1,17 +1,18 @@
-import { AfterViewInit, Component, ElementRef, ViewChild, isDevMode } from '@angular/core';
+import { AfterViewInit, OnInit, Component, ElementRef, ViewChild, isDevMode } from '@angular/core';
 import { Network } from 'vis-network/peer';
 import { DataSet } from 'vis-data/peer';
 import { NodeItem, EdgeItem, CoOrdinates, ColorScheme } from '../interface/network';
 import * as shortUUID from 'short-uuid';
 import keycharm from 'keycharm';
 import { InitData } from "./network-init-data";
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-network',
   templateUrl: './network.component.html',
   styleUrls: ['./network.component.css']
 })
-export class NetworkComponent implements AfterViewInit {
+export class NetworkComponent implements AfterViewInit, OnInit {
 
   @ViewChild('network') el!: ElementRef;
   private networkInstance!: Network;
@@ -30,13 +31,21 @@ export class NetworkComponent implements AfterViewInit {
   //=================================================================
   // UI Variables
   //=================================================================
+  nodeLabelForm!: FormGroup;
   viewNodeLabelModal: boolean = false;
-  nodeLabel: string = "";
   devMode: boolean = isDevMode();
 
   //=================================================================
 
+  ngOnInit(): void {
+    console.log("called on init");
+    this.nodeLabelForm = new FormGroup({
+      nodeLabelInput: new FormControl('', Validators.required)
+    });
+  }
+
   ngAfterViewInit() {
+    console.log("called after view init");
     const container = this.el.nativeElement;
     this.NODES = InitData.node
     this.EDGES = InitData.edge;
@@ -200,14 +209,14 @@ export class NetworkComponent implements AfterViewInit {
     console.log("handleNodeLabelClose");
     var node = this.nodeDetails;
     if (submit) {
-      node.label = this.nodeLabel;
+      node.label = this.nodeLabelForm.get('nodeLabelInput')?.value;
       this.NODES.update(node)
     } else {
       // cannot create a node without a user input label
       // delete the node
       this.NODES.remove(node.id);
     }
-
+    this.nodeLabelForm.reset();
     this.viewNodeLabelModal = false;
     this.clearNodeDetails()
   }
