@@ -9,6 +9,8 @@
   </div>
 </div>
 <button *ngIf="devMode" (click)="getAllNodeDetails()">all node details</button>
+<button *ngIf="devMode" (click)="getAllEdgeDetails()">all edge details</button>
+<button *ngIf="devMode" (click)="getAllDetails()">all variable details</button>
 <clr-modal [(clrModalOpen)]="viewNodeLabelModal">
   <h3 class="modal-title">Add state label</h3>
   <div class="modal-body">

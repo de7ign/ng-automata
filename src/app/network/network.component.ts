@@ -304,7 +304,34 @@ export class NetworkComponent implements AfterViewInit, OnInit {
    * print all node details
    */
   getAllNodeDetails() {
-    console.log(this.networkInstance.getPositions(this.NODES.getIds()))
+    console.log("All node details " + this.getJsonString(this.NODES.get()));
+  }
+
+  /**
+   * print all edge details
+   */
+  getAllEdgeDetails() {
+    console.log("All edge details " + this.getJsonString(this.EDGES.get()));
+  }
+
+  /**
+   * print all variables
+   */
+  getAllDetails() {
+    this.getAllNodeDetails();
+    this.getAllEdgeDetails();
+    console.log("Proxy node detail " + this.getJsonString(this.nodeDetails))
+    console.log("Node label input " + this.nodeLabelForm.get('nodeLabelInput')?.value);
+  }
+
+  /**
+   * return Json equivalent of Object 
+   * 
+   * @param o 
+   * @returns 
+   */
+  getJsonString(o: Object): string {
+    return JSON.stringify(o, null, 2)
   }
 
 }
