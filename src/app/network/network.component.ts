@@ -208,12 +208,10 @@ export class NetworkComponent implements AfterViewInit, OnInit {
   handleNodeLabelClose(submit: boolean) {
     console.log("handleNodeLabelClose");
     var node = this.nodeDetails;
-    if (submit) {
+    if(submit && this.nodeLabelForm.get('nodeLabelInput')?.value) {
       node.label = this.nodeLabelForm.get('nodeLabelInput')?.value;
-      this.NODES.update(node)
+      this.NODES.update(node);
     } else {
-      // cannot create a node without a user input label
-      // delete the node
       this.NODES.remove(node.id);
     }
     this.nodeLabelForm.reset();
